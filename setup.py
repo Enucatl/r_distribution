@@ -1,8 +1,5 @@
 # pylint: disable=all
 
-from distribute_setup import use_setuptools
-use_setuptools()
-
 from setuptools import setup, find_packages
 from get_git_version.version import get_git_version
 from subprocess import check_output
