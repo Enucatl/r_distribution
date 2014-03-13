@@ -88,7 +88,7 @@ class ThicknessFeatureSegmentation(pypes.component.Component):
                     log.error('Component Failed: %s',
                               self.__class__.__name__, exc_info=True)
 
-                packet.set("mask", mask)
+                packet.set("data", mask)
                 # send the packet to the next component
                 self.send('out', packet)
 

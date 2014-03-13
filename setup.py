@@ -13,6 +13,7 @@ setup(
     version=get_git_version(),
     packages=find_packages(exclude='test'),
     scripts=[
+        "bin/thickness_rotation.py",
     ],
 
     install_requires=[
