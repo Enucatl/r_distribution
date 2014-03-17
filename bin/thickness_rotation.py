@@ -20,6 +20,7 @@ from r_distribution.feature_segmentation import ThicknessFeatureSegmentation
 def multiple_outputs_reader(m=2):
     "repeat the output of the reader m times"
     abs_reader_reader = Hdf5Reader()
+    abs_reader_reader.__metatype__ = "TRANSFORMER"
     abs_reader_out = NMFunction(n=1, m=m)
     abs_reader_network = {
         abs_reader_reader: {
@@ -47,6 +48,7 @@ def datasets(*args):
 
 def main(file_name, jobs):
     in1out3 = NMFunction(n=1, m=3)
+    in1out3.__metatype__ = "ADAPTER"
     in1out3.set_parameter("function", datasets)
     abs_reader = HigherOrderComponent(multiple_outputs_reader(m=3))
     df_reader = HigherOrderComponent(multiple_outputs_reader(m=2))
