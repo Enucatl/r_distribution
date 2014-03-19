@@ -19,57 +19,61 @@ from r_distribution.feature_segmentation import ThicknessFeatureSegmentation
 
 def multiple_outputs_reader(m=2):
     "repeat the output of the reader m times"
-    abs_reader_reader = Hdf5Reader()
-    abs_reader_reader.__metatype__ = "TRANSFORMER"
-    abs_reader_out = NMFunction(n=1, m=m)
-    abs_reader_network = {
-        abs_reader_reader: {
-            abs_reader_out: ("out", "in")
+    reader = Hdf5Reader()
+    reader.__metatype__ = "TRANSFORMER"
+    out = NMFunction(n=1, m=m)
+    network = {
+        reader: {
+            out: ("out", "in")
         }
     }
-    return abs_reader_network
+    return network
 
 
-def weighted_average():
+def average_function(a, w):
+    "average over last axis"
+    return np.average(a, axis=-1, weights=w)
+
+
+def average():
     "calculate weighted average"
-    weighted_average = NMFunction(n=2)
-    weighted_average.set_parameter(
-        "function", lambda a, w: np.average(a, axis=-1, weights=w))
-    return weighted_average
+    average = NMFunction(n=2)
+    average.set_parameter(
+        "function", average_function)
+    return average
 
 
-def datasets(*args):
+def datasets(*_):
     "return the name of the datasets"
     return [
         "postprocessing/absorption",
-        "postprocessing/visibility_reduction",
-        "postprocessing/visibility"]
+        "postprocessing/visibility_reduction"]
+
+
+def log_function(df, a):
+    "logarithm ratio"
+    return np.log(df)/np.log(a)
 
 
 def main(file_name, jobs):
-    in1out3 = NMFunction(n=1, m=3)
-    in1out3.__metatype__ = "ADAPTER"
-    in1out3.set_parameter("function", datasets)
+    in1out2 = NMFunction(n=1, m=2)
+    in1out2.__metatype__ = "ADAPTER"
+    in1out2.set_parameter("function", datasets)
     abs_reader = HigherOrderComponent(multiple_outputs_reader(m=3))
     df_reader = HigherOrderComponent(multiple_outputs_reader(m=2))
-    visibility_reader = Hdf5Reader()
-    squared = NMFunction()
-    squared.set_parameter("function", np.square)
     feature_segmentation = ThicknessFeatureSegmentation()
-    product = NMFunction(n=2, m=3)
-    product.set_parameter("function", lambda x, y: x * y)
+    feature_segmentation_out = NMFunction(m=3)
     log_ratio = NMFunction(n=2)
     log_ratio.set_parameter(
         "function",
-        lambda df, a: np.log(df)/np.log(a))
-    average_abs = weighted_average()
-    average_df = weighted_average()
-    average_r = weighted_average()
+        log_function)
+    average_abs = average()
+    average_df = average()
+    average_r = average()
     network = {
-        in1out3: {
+        in1out2: {
             abs_reader: ("out", "in"),
             df_reader: ("out1", "in"),
-            visibility_reader: ("out2", "in")
         },
         abs_reader: {
             average_abs: ("out", "in"),
@@ -80,16 +84,13 @@ def main(file_name, jobs):
             log_ratio: ("out", "in"),
             average_df: ("out1", "in")
         },
-        visibility_reader: {
-            squared: ("out", "in")
-        },
         feature_segmentation: {
-            product: ("out", "in")
+            feature_segmentation_out: ("out", "in")
         },
-        squared: {
-            product: ("out", "in1")
+        log_ratio: {
+            average_r: ("out", "in")
         },
-        product: {
+        feature_segmentation_out: {
             average_abs: ("out", "in1"),
             average_df: ("out1", "in1"),
             average_r: ("out2", "in1")
