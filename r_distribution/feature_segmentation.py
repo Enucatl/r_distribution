@@ -63,6 +63,8 @@ class ThicknessFeatureSegmentation(pypes.component.Component):
             for packet in self.receive_all('in'):
                 try:
                     image = packet.get("data")
+                    log.debug("%s received %s %s",
+                              self.__class__.__name__, image.shape, image)
                     edges = ndimage.sobel(
                         ndimage.gaussian_filter1d(
                             image,
@@ -70,21 +72,15 @@ class ThicknessFeatureSegmentation(pypes.component.Component):
                         mode="constant")
                     non_maximum_suppressed = ndimage.maximum_filter1d(
                         edges, 1)
-                    hysteresis_thresholded = -ndimage.binary_dilation(
-                        np.abs(non_maximum_suppressed) > high_threshold,
-                        iterations=-1,
-                        mask=np.abs(non_maximum_suppressed) > low_threshold)
-                    features, feature_number = ndimage.measurements.label(
-                        hysteresis_thresholded)
-                    if feature_number == 2 or feature_number == 3:
-                        mask = features == 2
-                    elif feature_number == 1:
-                        mask = features == 1
-                    else:
-                        log.debug("%s features %s found!!!",
-                                  self.__class__.__name__,
-                                  feature_number, exc_info=True)
-                        mask = None
+                    mask = np.zeros_like(non_maximum_suppressed)
+                    for i, line in enumerate(non_maximum_suppressed):
+                        hysteresis_thresholded = -ndimage.binary_dilation(
+                            np.abs(line) > high_threshold,
+                            iterations=-1,
+                            mask=np.abs(line) > low_threshold)
+                        features, feature_number = ndimage.measurements.label(
+                            hysteresis_thresholded)
+                        mask[i] = features == 1
                     packet.set("data", mask)
                 except:
                     log.error('Component Failed: %s',

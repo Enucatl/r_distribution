@@ -32,6 +32,7 @@ def multiple_outputs_reader(m=2):
 
 def average_function(a, w):
     "average over last axis"
+    print("SHAPES", a.shape, w.shape)
     return np.average(a, axis=-1, weights=w)
 
 
