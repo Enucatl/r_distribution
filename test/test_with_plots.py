@@ -24,20 +24,21 @@ index = args.index
 h5py_file = h5py.File("../data/S00918_S00957.hdf5")
 dataset = h5py_file["postprocessing/absorption"][...]
 image = dataset
-_, ((fig1, fig2), (fig3, fig4)) = plt.subplots(2, 2)
+_, ((fig1, fig2), (fig3, fig4), (fig5, fig6)) = plt.subplots(3, 2)
 fig1.plot(image[index])
-edges = ndimage.sobel(
-    ndimage.gaussian_filter1d(
-        image,
-        sigma=10),
-    mode="constant")[..., 1:-1]
-fig2.plot(edges[index])
+derivative_filter = ndimage.gaussian_filter1d(
+    image,
+    order=1,
+    sigma=10)[..., 1:-1]
+fig2.plot(derivative_filter[index])
+edges = ndimage.sobel(derivative_filter, mode="constant")
+fig3.plot(edges[index])
 non_maximum_suppressed = ndimage.maximum_filter1d(
-    edges, 10)
+    edges, 3)
 high_threshold = np.max(non_maximum_suppressed[index]) * 0.7
 low_threshold = high_threshold * 0.4
 print(high_threshold, low_threshold)
-fig3.plot(np.abs(non_maximum_suppressed[index]))
+fig4.plot(np.abs(non_maximum_suppressed[index]))
 mask = np.zeros_like(non_maximum_suppressed)
 for i, line in enumerate(non_maximum_suppressed):
     hysteresis_thresholded = -ndimage.binary_dilation(
@@ -54,7 +55,14 @@ for i, line in enumerate(non_maximum_suppressed):
     elif feature_number == 2:
         mask[i] = features == 2
 
-fig4.plot(mask[index])
+fig5.plot(mask[index])
+min_mask = np.zeros_like(image, dtype=np.bool)
+for i, line in enumerate(image):
+    minimum = np.min(image[i])
+    factor = 1.1
+    threshold = factor * minimum
+    min_mask[i] = image[i] < threshold
+fig6.plot(min_mask[index])
 plt.show()
 plt.ion()
 input()
