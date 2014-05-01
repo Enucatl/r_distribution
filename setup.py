@@ -14,9 +14,8 @@ setup(
     ],
 
     install_requires=[
-        'numpy==1.8.0',
-        'h5py==2.2.1',
-        'matplotlib==1.3.1',
+        'numpy',
+        'h5py',
     ],
 
     package_data={
