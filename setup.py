@@ -1,13 +1,12 @@
 # pylint: disable=all
 
 from setuptools import setup, find_packages
-from get_git_version.version import get_git_version
 from subprocess import check_output
 
 
 setup(
     name="r_distribution",
-    version=get_git_version(),
+    version="v1.0.0",
     packages=find_packages(exclude='test'),
     scripts=[
         "bin/thickness_rotation.py",
